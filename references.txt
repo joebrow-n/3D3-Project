@@ -1,0 +1,8 @@
+https://www.geeksforgeeks.org/socket-programming-cc/
+https://stackoverflow.com/questions/5815675/what-is-sock-dgram-and-sock-stream
+https://www.geeksforgeeks.org/write-your-own-atoi/
+https://www.ibm.com/docs/en/ztpf/1.1.0.15?topic=functions-structures-defined-in-syssocketh-header-file
+https://docs.microsoft.com/en-us/windows/win32/api/ws2def/ns-ws2def-sockaddr_in
+https://www.ibm.com/docs/en/zos/2.4.0?topic=lf-htons-translate-unsigned-short-integer-into-network-byte-order
+https://www.ibm.com/docs/en/zos/2.4.0?topic=hosts-network-byte-order
+https://www.oreilly.com/library/view/practical-c-programming/9781838641108/d27298fa-6ef4-45b4-9e6d-62c1e3aef7ed.xhtml

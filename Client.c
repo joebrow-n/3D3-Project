@@ -726,24 +726,40 @@ int main(int argc, char** argv) {
 	// Argv[2] - PortNumber for the Client
 	// Argv[3] - Data Folder Path
 	// Argv[4] - Complete Path to the List of Files that the Peer wants to Publish or the complete Path to the folder containing the Files 
-
 	
 	// Accept the Inputs and call the init Function
+	/**
+	 * Socket creation is implemented as follows: int socketToBeCreated = socket(domain, type, protocol).
+	 * 
+	 * For serverSock and peerAsServerSock, AF_INET is the specified communication domain, used for communicating between different
+	 * hosts connected by IPV4. SOCK_STREAM is used since we are operating a TCP Protocol. 0 is the protocol value for Internet 
+	 * Protocol (IP).
+	 */
     int serverSock = socket(AF_INET, SOCK_STREAM, 0);
     int peerAsServerSock = socket(AF_INET, SOCK_STREAM, 0);
     int clientSock;
+	// Use atoi to convert commandline argument (PortNumber in this case) to int.
     int peerAsServerListeningPort = atoi(argv[2]);
     int sockaddr_len = sizeof(struct sockaddr_in);
 
+	// Buffer size defined in peerHeaders.h.
     char buffer[BUFFER_SIZE_NETWORK];
 
+	// sockaddr_in will be used to specify a transport address and port for the AF_INET family.
     struct sockaddr_in serverAddress;
     struct sockaddr_in peerAsServerAddress;
     struct sockaddr_in client;
 
+	// Standard address family for the transport address.
     serverAddress.sin_family = AF_INET;
+	// Converts the server address from a string to an int (atoi(argv[1])) to a network byte order, which defines the bit-order of
+	// network addresses as they pass thorugh the network.
     serverAddress.sin_port = htons(atoi(argv[1]));
+	// This variable holds information about addresses we agree to accept.In our case, we would like to accept connections from any
+	// internet address, so we use INADDR_ANY - this is an "IP Address" that is used when we don't want to bind a socket to any
+	// specific IP address.
     serverAddress.sin_addr.s_addr = INADDR_ANY;
+	// set sin_zero to 0 since it is reserved for system use.
     memset(serverAddress.sin_zero, '\0', sizeof(serverAddress.sin_zero));
 
     peerAsServerAddress.sin_family = AF_INET;
@@ -751,26 +767,33 @@ int main(int argc, char** argv) {
     peerAsServerAddress.sin_addr.s_addr = INADDR_ANY;
     memset(peerAsServerAddress.sin_zero, '\0', sizeof(peerAsServerAddress.sin_zero));
 
+	// Check that the Server socket has been properly created
     if((serverSock = socket(AF_INET, SOCK_STREAM, 0)) == -1){
         perror("server socket error\n");
         exit(-1);
     }
     
-    // inititalize peerAsServer socket descriptor
+    // Check that the Peer (acting as a server) socket has been properly created
     if((peerAsServerSock = socket(AF_INET, SOCK_STREAM, 0)) == -1){
         perror("server socket error\n");
         exit(-1);
     }
 
+	// Path to files
     char *dataFolderPath = argv[3];
+	// Number of commandline arguments less the commandline arguments used to initialise the program
     int numOfFiles = argc-4;
 
     int inputSize = 0;
     for(int i=4;i<argc;i++){
+		// if there are still more commandline arguments to come
     	if(i!=argc-1)
-    		inputSize += strlen(argv[i])+1;	// To store delim - ","
+			// Add the length of the filename + 1 (for delimiter ",") to the input size
+    		inputSize += strlen(argv[i])+1;
+		// If this is the last commandline argument
     	else
-    		inputSize += strlen(argv[i])+1; // To store "\0"
+			// Add the length of the filename + 1 (for delimiter "\0") to the input size
+    		inputSize += strlen(argv[i])+1;
     }
 
 
