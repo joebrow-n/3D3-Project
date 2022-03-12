@@ -39,14 +39,20 @@ char* encodeMessageServer(Message m){
 // to initialize the dataFolder directory to contain ChunkFolder and P2PFolder 
 void initDirectory(char *chunkFold, char *p2pFold){
 	int dirCheck;
-	struct stat st1 = {0};
 
+	// stat struct to hold information about files
+	struct stat st1 = {0};
+	// if the folder does not already exist
 	if(stat(chunkFold, &st1) == -1) {
+		// Create a new folder to hold stored file chunks
     	mkdir(chunkFold, 0777);
 	}
 
+	// stat structure to hold information about the files
 	struct stat st2 = {0};
+	// If the folder does not already exists
 	if(stat(p2pFold, &st2) == -1) {
+		// Create a new folder to store the downloaded files
     	mkdir(p2pFold, 0777);
 	}
 
@@ -60,7 +66,9 @@ int fileChunkInit(char *chunkFolderPath, char* publishPath){
 	char delim[] = ",";
 	// removeAllDirectories(chunkFolderPath);
 
-	char *token = strtok(publishPath, delim);
+	// use strtok to get pointer to first token in the string, which are separated by the "," delimiter
+	char *token = strtok(publishPath, delim); 
+	// If NULL pointer, then either there are no files or an error has occuured
 	if(token==NULL){
 		perror("Publish Path Error - NULL Token Found");
 		retVal = 0;
@@ -81,17 +89,21 @@ int fileChunkInit(char *chunkFolderPath, char* publishPath){
 
 // initialize dataFolderPath with the chunkFolder and the P2PFiles Folder
 void init(char *dataFolderPath, char *publishPath){
+	// Length of path to file folder
 	int chunkFolderPathSize = snprintf(NULL, 0, "%s%s", dataFolderPath,"chunkFolder/")+1;
 	int p2pFolderPathSize = snprintf(NULL, 0, "%s%s", dataFolderPath,"p2pFiles/")+1;
 
+	// Allocate memory to global folder variables, depending on the lengths calculated above
 	chunkFold = malloc(chunkFolderPathSize*sizeof(char));
 	p2pFold = malloc(p2pFolderPathSize*sizeof(char));
+	// Write the strings from above to the global variables
 	sprintf(chunkFold, "%s%s", dataFolderPath, "chunkFolder/");
 	sprintf(p2pFold, "%s%s", dataFolderPath, "p2pFiles/");
 
 	// create directory for storing downloaded chunks and chunkFold for storing all the chunks of the file
 	initDirectory(chunkFold, p2pFold);
 
+	// Function to separate file into chunks for publishing
 	fileChunkInit(chunkFold, publishPath);
 	return;
 }
@@ -796,7 +808,7 @@ int main(int argc, char** argv) {
     		inputSize += strlen(argv[i])+1;
     }
 
-
+	// Following function is used to store the filenames and paths in array publishPath as well as delimiter to separate elements
     char publishPath[inputSize];
     int tempLen = 0;
     for(int i=4;i<argc;i++){
@@ -807,7 +819,9 @@ int main(int argc, char** argv) {
 
     }
 
+	// Append the array with \0
     sprintf(publishPath+tempLen, "%s", "\0");
+	// Allocate memory to hold this string
     char *publishPathCpy = malloc(strlen(publishPath)+1);
     strcpy(publishPathCpy, publishPath);
     // initialize client and get the chunks folder ready

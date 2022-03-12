@@ -33,15 +33,18 @@ extern "C" {
 	#define CHUNK_PATH "split --numeric-suffixes=1 -a 9 -b %d \"%s\" \"%s/\""
     #define MAX_CLIENTS 10
 
-
+	// Function to check status of a given file
 	int isRegularFile(const char *path)
 	{
+		// Create a stat struct for the given file
 	    struct stat path_stat;
+		// Obtain information about the file
 	    stat(path, &path_stat);
+		// Return whther or not the file is "Regular"
 	    return S_ISREG(path_stat.st_mode);
 	}
 
-
+	// Function to create folder to host file chunks
 	char* createChunkDirectory(char *fileName, char *chunkFolderPath){
 		char *fullPath;
 		struct stat st = {0};
@@ -61,6 +64,7 @@ extern "C" {
 
 
 	void chunkFile(char *absoluteFilePath, char *chunkFolderPath){
+		// return pointer to final component of tha pathname, deleting any trailing "/" characters
 		char *baseFileName = basename(absoluteFilePath);
 		char *dirPath = createChunkDirectory(baseFileName, chunkFolderPath);
 
