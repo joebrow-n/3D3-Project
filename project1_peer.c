@@ -36,57 +36,72 @@ void receiveFile(int sd, char* content);
 
 int main(int argc, char **argv)
 {
-	int 	n, i, alen, ret_sel, sd_tcp, sd_tcp3;
-	int 	sd, port = 3000, file;
-	struct	hostent		*phe;
+	int n, i, alen, ret_sel, sd_tcp, sd_tcp3;
+	int sd, port = 3000, file;
+	struct	hostent	*phe; // Store information about given host
 	struct	sockaddr_in sin, server, reg_addr, client;
-	char	*host = "localhost", *pos, username[10], sbuf[BUFLEN];
+	char *host = "localhost", *pos, username[10], sbuf[BUFLEN];
 	char command;
 	char registered[10];
 	struct pdu1 rpdu;
 	fd_set rfds, afds;
 
+	// Check number of commandline arguments
 	switch (argc) {
-	case 1:
-		break;
-	case 2:
-		host = argv[1];
-	case 3:
-		host = argv[1];
-		port = atoi(argv[2]);
-		break;
-	default:
-		fprintf(stderr, "usage: UDPtime [host [port]]\n");
-		exit(1);
+		// If there is only one commandline argument (argument to run the program) then break from switch statement
+		case 1:
+			break;
+		// If there are two commandline arguments then the second commandline argument is the IP address of the server
+		case 2:
+			host = argv[1];
+		// If there are 3 commandline arguments then the second is commandline argument is the IP address of the server 
+		// and the third is the listening port number of the server
+		case 3:
+			host = argv[1];
+			port = atoi(argv[2]);
+			break;
+		// If none of the above conditions are satisfied, return an error
+		default:
+			fprintf(stderr, "usage: UDPtime [host [port]]\n");
+			exit(1);
 	}
 
+	// set the sin sockaddr_in to zero
 	memset(&sin, 0, sizeof(sin));
-        sin.sin_family = AF_INET;                                                                
-        sin.sin_port = htons(port);
+	// Standard state for sin_family
+    sin.sin_family = AF_INET; 
+	// convert the port number to a network byte order - defines the bit-order of network addresses as they pass through the network                                     
+    sin.sin_port = htons(port);
         
-    /* Map host name to IP address, allowing for dotted decimal */
-        if ( phe = gethostbyname(host) ){
-                memcpy(&sin.sin_addr, phe->h_addr, phe->h_length);
-        }
-        else if ( (sin.sin_addr.s_addr = inet_addr(host)) == INADDR_NONE )
+    // Create hostent struct for host (contains information about host)
+	if (phe = gethostbyname(host)){
+			// copy the address into the sin struct
+			memcpy(&sin.sin_addr, phe->h_addr, phe->h_length);
+	}
+	// Else return error
+	else if ( (sin.sin_addr.s_addr = inet_addr(host)) == INADDR_NONE )
 		fprintf(stderr, "Can't get host entry \n");
                                                                                 
-    /* Allocate a UDP socket */
-        sd = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sd < 0)
+    // Create a UDP socket - uses AF_INET for hosts connected by IPv4, SOCK_DGRAM for UDP connection, Protocol value 0 for IP
+	sd = socket(AF_INET, SOCK_DGRAM, 0);
+	// If error occurred during creation, print error message
+	if (sd < 0)
 		fprintf(stderr, "Can't create UDP socket \n");
 
-    /* Allocate a TCP socket */
-        sd_tcp = socket(AF_INET, SOCK_STREAM, 0);
-        if (sd_tcp < 0)
+    // Create a TCP socket - uses AF_INET for hosts connected by IPv4, SOCK_STREAM for TCP connection, Protocol value 0 for IP
+	sd_tcp = socket(AF_INET, SOCK_STREAM, 0);
+	// If error occurred during creation, print error message
+	if (sd_tcp < 0)
 		fprintf(stderr, "Can't create TCP socket \n");
-        newAddress(&rpdu, sd_tcp); 
+	
+	// create new address for the TCP socket
+	newAddress(&rpdu, sd_tcp); 
                                                                       
     /* Connect the UDP socket */
-        if (connect(sd, (struct sockaddr *)&sin, sizeof(sin)) < 0)
+	if (connect(sd, (struct sockaddr *)&sin, sizeof(sin)) < 0)
 		fprintf(stderr, "Can't connect to server");
 	
-/*		START		*/
+	// Begin the creation of a peer
 	printf("Enter Username: \n");
 	scanf("%s", username);
 	
@@ -377,7 +392,7 @@ void newAddress(struct pdu1 *pdu, int sd_tcp){
 	int alen;
 	struct sockaddr_in reg_addr;
 
-	bzero((char*)&reg_addr, sizeof(struct sockaddr_in));
+	memset(&reg_addr, 0, sizeof(reg_addr));
 	reg_addr.sin_family = AF_INET;
 	reg_addr.sin_port = htons(0); // Random Port #	
 	reg_addr.sin_addr.s_addr = inet_addr("127.0.0.1"); // IP Address of localhost
