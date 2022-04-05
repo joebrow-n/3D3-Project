@@ -15,7 +15,7 @@
 #include <sys/select.h>
 #include <dirent.h>
 
-#define SERVER_TCP_PORT 3000	/* well-known port */
+#define SERVER_TCP_PORT 33000	/* well-known port */
 #define BUFLEN		256	/* buffer length */
 
 struct pdu1 {
@@ -37,7 +37,7 @@ void receiveFile(int sd, char* content);
 int main(int argc, char **argv)
 {
 	int n, i, alen, ret_sel, sd_tcp, sd_tcp3;
-	int sd, port = 3000, file;
+	int sd, port = 33000, file;
 	struct	hostent	*phe; // Store information about given host
 	struct	sockaddr_in sin, server, reg_addr, client;
 	char *host = "localhost", *pos, username[10], sbuf[BUFLEN];
