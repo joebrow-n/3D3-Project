@@ -394,8 +394,8 @@ void newAddress(struct pdu1 *pdu, int sd_tcp){
 
 	memset(&reg_addr, 0, sizeof(reg_addr));
 	reg_addr.sin_family = AF_INET;
-	reg_addr.sin_port = htons(0); // Random Port #	
-	reg_addr.sin_addr.s_addr = inet_addr("127.0.0.1"); // IP Address of localhost
+	reg_addr.sin_port = htons(33000); // Random Port #	
+	reg_addr.sin_addr.s_addr = inet_addr("10.35.70.32"); // IP Address of localhost
 	if(bind(sd_tcp, (struct sockaddr *)&reg_addr, sizeof(reg_addr)) == -1){
 		fprintf(stderr, "Can't bind name to socket: %d\n", sd_tcp);
 		exit(1);
