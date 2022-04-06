@@ -140,6 +140,7 @@ main(int argc, char *argv[])
     /* Bind the socket */
         if (bind(servSock, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0)
 		fprintf(stderr, "can't bind to %d port\n",port);
+		printf("Bound to port %d\n", port);
         listen(servSock, 5);	
 		addrLen = sizeof(fromAddr);
 
@@ -174,9 +175,9 @@ main(int argc, char *argv[])
 			}
 			sendto(servSock, &ack, sizeof(ack), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr));
 			break;
-		case 'L':
-			printf("Got type L\n");
-			spdu.type = 'L';
+		case 'S':
+			printf("Got type S\n");
+			spdu.type = 'S';
 			if(searchList(&buf) < 0){
 				fprintf(stderr, "Error: File name not found\n");
 				sendto(servSock, &error, sizeof(error), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr));
@@ -184,7 +185,7 @@ main(int argc, char *argv[])
 			}
 			// buf found in List
 			spdu = buf;
-			printf("Sending File'servSock address...\n");
+			printf("Sending File's address...\n");
 			sendto(servSock, &spdu, sizeof(spdu), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr));
 			break;
 		case 'T':
