@@ -1,4 +1,3 @@
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -66,17 +65,16 @@ int addToList(struct PDUFiles pdu){
 }
 
 int removeFromList(struct PDUFiles pdu){
-	/*Removes Files from the File List as they are unregistered by the peers
-	Takes a File Data Unit as input, returns 0 for success and -1 for failure*/
-	for(int i = 0; i < counter; i++){
 
-
-	printf("| %-10s   / HTTP/1.1   %10s |\r\n", pdu.http_req, pdu.fileName);
+		printf("| %-10s   / HTTP/1.1   %10s |\r\n", pdu.http_req, pdu.fileName);
 	printf("| %-10i       |        %10i |\n", pdu.source_port, pdu.dest_port);
     printf("| %-10i       |        %10i |\n", pdu.seq_num, pdu.payload);
 
 	ack.ack_num = pdu.seq_num + pdu.payload;
 	error.ack_num = ack.ack_num;
+	/*Removes Files from the File List as they are unregistered by the peers
+	Takes a File Data Unit as input, returns 0 for success and -1 for failure*/
+	for(int i = 0; i < counter; i++){
 
 
 		if(strcmp(fileList[i].peerName, pdu.peerName) == 0 && strcmp(fileList[i].fileName, pdu.fileName) == 0){
@@ -133,7 +131,7 @@ main(int argc, char *argv[])
 	int	addrLen;			/* from-address length		*/
 	struct sockaddr_in servAddr; /* an Internet endpoint address         */
     int servSock, type;        /* socket descriptor and socket type    */
-	int port=3000;
+	int port=33000;
 	int i, file;
 	struct stat size;
 	

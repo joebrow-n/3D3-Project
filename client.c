@@ -1,4 +1,3 @@
-/* A simple echo client using TCP */
 #include <stdio.h>
 #include <netdb.h>
 #include <sys/types.h>
@@ -15,7 +14,7 @@
 #include <sys/select.h>
 #include <dirent.h>
 
-#define SERVER_TCP_PORT 3000	/* well-known port */
+#define SERVER_TCP_PORT 33000	/* well-known port */
 #define BUFLEN		256	/* buffer length */
 
 struct pdu1 {
@@ -43,7 +42,7 @@ void receiveFile(int sd, char* content);
 int main(int argc, char **argv)
 {
 	int n, i, alen, ret_sel, sd_tcp, sd_tcp3;
-	int sd, port = 3000, file;
+	int sd, port = 33000, file;
 	struct	hostent	*phe; // Store information about given host
 	struct	sockaddr_in sin, server, reg_addr, client;
 	char *host = "localhost", *pos, username[10], sbuf[BUFLEN];
@@ -71,6 +70,7 @@ int main(int argc, char **argv)
 			fprintf(stderr, "usage: UDPtime [host [port]]\n");
 			exit(1);
 	}
+
 
 	// set the sin sockaddr_in to zero
 	memset(&sin, 0, sizeof(sin));
@@ -149,8 +149,8 @@ int main(int argc, char **argv)
 			case 'R':
 				rpdu.type = 'R';
 				strcpy(rpdu.http_req, "POST");
-				rpdu.source_port = 33000;
-				rpdu.dest_port = 33000;
+				rpdu.source_port = port;
+				rpdu.dest_port = port;
 				rpdu.seq_num = sequence_number;
 				strcpy(rpdu.peerName, username);
 				printf("File (to upload) name: \n");
@@ -186,8 +186,8 @@ int main(int argc, char **argv)
 			case 'T':
 				tpdu.type = 'T';
 				strcpy(tpdu.http_req, "DELETE");
-				tpdu.source_port = 33000;
-				tpdu.dest_port = 33000;
+				tpdu.source_port = port;
+				tpdu.dest_port = port;
 				tpdu.seq_num = sequence_number;
 				strcpy(tpdu.peerName, username);
 				printf("File (to deregister) name: \n");
@@ -241,8 +241,8 @@ int main(int argc, char **argv)
 				spdu.type = 'S';
 
 				strcpy(spdu.http_req, "GET");
-				spdu.source_port = 33000;
-				spdu.dest_port = 33000;
+				spdu.source_port = port;
+				spdu.dest_port = port;
 				spdu.seq_num = sequence_number;
 				strcpy(spdu.peerName, username);
 
@@ -265,7 +265,7 @@ int main(int argc, char **argv)
 				}else if(dpdu.type == 'S'){
 					// Extract address from pdu and setup TCP connection
 					printf("PDU received:\nType: %c, Peer Name: %s, Content Name: %s\n", dpdu.type, dpdu.peerName, dpdu.contentName);
-					printf("Port: %u\n", dpdu.data.sin_port);
+					printf("Port: %u\n", port);
 					
 					// Connect to content server
 					int sd_tcp2;
@@ -281,18 +281,6 @@ int main(int argc, char **argv)
 					// Request file from content server
 					receiveFile(sd_tcp2, dpdu.contentName); // stuck inside here
 					printf("File received\n");
-										
-					// Register file to content server
-					sd_tcp3 = socket(AF_INET, SOCK_STREAM, 0);
-					if (sd_tcp3 < 0)
-						fprintf(stderr, "Can't create TCP socket \n");
-					newAddress(&rpdu2, sd_tcp3); 
-					printf("Port: %d\n", rpdu2.data.sin_port);
-					rpdu2.type = 'R';
-					strcpy(rpdu2.peerName, username);
-					strcpy(rpdu2.contentName, dpdu.contentName);
-					write(sd, &rpdu2, sizeof(rpdu2));
-					printf("PDU Sent...\n");
 					
 					// Reply from Server
 					while ((i = read(sd, &bp, sizeof(bp))) > 0){
@@ -313,8 +301,8 @@ int main(int argc, char **argv)
 
 				opdu1.type = 'O';
 				strcpy(opdu1.http_req, "LIST");
-				opdu1.source_port = 33000;
-				opdu1.dest_port = 33000;
+				opdu1.source_port = port;
+				opdu1.dest_port = port;
 				opdu1.seq_num = sequence_number;
 				strcpy(opdu1.peerName, username);
 				strcmp(opdu1.contentName, "LIST");
