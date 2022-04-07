@@ -72,6 +72,7 @@ int main(int argc, char **argv)
 			exit(1);
 	}
 
+
 	// set the sin sockaddr_in to zero
 	memset(&sin, 0, sizeof(sin));
 	// Standard state for sin_family
@@ -150,7 +151,7 @@ int main(int argc, char **argv)
 				rpdu.type = 'R';
 				strcpy(rpdu.http_req, "POST");
 				rpdu.source_port = rpdu.data.sin_port;
-				rpdu.dest_port = SERVER_TCP_PORT;
+				rpdu.dest_port = port;
 				rpdu.seq_num = sequence_number;
 				strcpy(rpdu.peerName, username);
 				printf("File (to upload) name: \n");
@@ -187,7 +188,7 @@ int main(int argc, char **argv)
 				tpdu.type = 'T';
 				strcpy(tpdu.http_req, "DELETE");
 				tpdu.source_port = tpdu.data.sin_port;
-				tpdu.dest_port = SERVER_TCP_PORT;
+				tpdu.dest_port = port;
 				tpdu.seq_num = sequence_number;
 				strcpy(tpdu.peerName, username);
 				printf("File (to deregister) name: \n");
@@ -242,7 +243,7 @@ int main(int argc, char **argv)
 
 				strcpy(spdu.http_req, "GET");
 				spdu.source_port = spdu.data.sin_port;
-				spdu.dest_port = SERVER_TCP_PORT;
+				spdu.dest_port = port;
 				spdu.seq_num = sequence_number;
 				strcpy(spdu.peerName, username);
 
@@ -314,7 +315,7 @@ int main(int argc, char **argv)
 				opdu1.type = 'O';
 				strcpy(opdu1.http_req, "LIST");
 				opdu1.source_port = opdu1.data.sin_port;
-				opdu1.dest_port = SERVER_TCP_PORT;
+				opdu1.dest_port = port;
 				opdu1.seq_num = sequence_number;
 				strcpy(opdu1.peerName, username);
 				strcmp(opdu1.contentName, "LIST");
