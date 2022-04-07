@@ -20,6 +20,11 @@
 
 struct pdu1 {
 	char type;
+	char http_req[10];
+	int source_port;
+	int dest_port;
+	int seq_num;
+	int payload;
 	char peerName[10];
 	char contentName[10];
 	struct sockaddr_in data;
@@ -27,6 +32,7 @@ struct pdu1 {
 
 struct pdu2 {
 	char type;
+	int ack_num;
 	char data[100];
 } error, ack;
 
@@ -110,6 +116,10 @@ int main(int argc, char **argv)
 	strcpy(error.data,"Error");
 	
 	ack.type = 'A';
+
+	int sequence_number = 0;
+	int name;
+	int file_name;
 	
 	printf("'?' for help\n");
 	while(1){
@@ -128,19 +138,29 @@ int main(int argc, char **argv)
 			// stdin
 			scanf(" %c", &command);
 
-			struct pdu1 tpdu, spdu, dpdu, rpdu2;
+			struct pdu1 tpdu, spdu, dpdu, rpdu2, opdu1;
 			struct pdu2 bp, opdu;	
 			
 			switch(command){
 			case '?':
 				printf("Commands:\n R - Content Registration\n T - Content Deregistration\n L - List Local Content\n D - Content Download Request\n O - List all the online content\n Q - Quit\n");
 				break;
+
 			case 'R':
 				rpdu.type = 'R';
+				strcpy(rpdu.http_req, "POST");
+				rpdu.source_port = 33000;
+				rpdu.dest_port = 33000;
+				rpdu.seq_num = sequence_number;
 				strcpy(rpdu.peerName, username);
 				printf("File (to upload) name: \n");
 				scanf(" %s", &rpdu.contentName);
-				
+
+				name = strlen(rpdu.peerName);
+				file_name = strlen(rpdu.contentName);
+				rpdu.payload = file_name + name;
+				sequence_number = sequence_number + rpdu.payload;
+
 				printf("Port: %u\n", rpdu.data.sin_port);
 				
 				// Send to Server
@@ -149,32 +169,50 @@ int main(int argc, char **argv)
 				
 				// Reply from Server
 				while ((i = read(sd, &bp, sizeof(bp))) > 0){
-					if(bp.type == 'E'){
-						printf("%s\n", bp.data);
+					if(bp.type == 'N'){
+							printf("|        HTTP/1.1 404 Bad Request      |\r\n");
+							printf("| %-10i       |        %10i |\n", rpdu.source_port, rpdu.dest_port);
+   							printf("| %-10c       |        %10i |\n",bp.type, bp.ack_num);;
 						break;
 					}else if(bp.type == 'A'){
-						printf("Acknowledged, success!\n");
-						strcpy(registered, rpdu.contentName);
+							printf("|           HTTP/1.1 200 OK            |\r\n");
+							printf("| %-10i       |        %10i |\n", rpdu.source_port, rpdu.dest_port);
+   							printf("| %-10c       |        %10i |\n",bp.type, bp.ack_num);					
+							strcpy(registered, rpdu.contentName);
 						break;
 					}
 				}
 				break;
 			case 'T':
 				tpdu.type = 'T';
+				strcpy(tpdu.http_req, "DELETE");
+				tpdu.source_port = 33000;
+				tpdu.dest_port = 33000;
+				tpdu.seq_num = sequence_number;
 				strcpy(tpdu.peerName, username);
 				printf("File (to deregister) name: \n");
 				scanf(" %s", &tpdu.contentName);
+
+				name = strlen(tpdu.peerName);
+				file_name = strlen(tpdu.contentName);
+				tpdu.payload = file_name + name;
+				sequence_number = sequence_number + tpdu.payload;
 				
 				write(sd, &tpdu, sizeof(tpdu));
 				printf("PDU Sent...\n");
 				
 				// Reply from Server
 				while ((i = read(sd, &bp, sizeof(bp))) > 0){
-					if(bp.type == 'E'){
-						printf("%s\n", bp.data);
-						exit(1);
+					if(bp.type == 'N'){
+							printf("|        HTTP/1.1 404 Bad Request      |\r\n");
+							printf("| %-10i       |        %10i |\n", tpdu.source_port, tpdu.dest_port);
+   							printf("| %-10c       |        %10i |\n",bp.type, bp.ack_num);
+						break;
 					}else if(bp.type == 'A'){
-						printf("Acknowledged, success!\n");
+							printf("|           HTTP/1.1 200 OK            |\r\n");
+							printf("| %-10i       |        %10i |\n", tpdu.source_port, tpdu.dest_port);
+   							printf("| %-10c       |        %10i |\n",bp.type, bp.ack_num);						
+							//strcpy(registered, tpdu.contentName);
 						break;
 					}
 				}
@@ -201,9 +239,22 @@ int main(int argc, char **argv)
 			case 'D':
 				// S - Search for address of corresponding content server from Index Server
 				spdu.type = 'S';
+
+				strcpy(spdu.http_req, "GET");
+				spdu.source_port = 33000;
+				spdu.dest_port = 33000;
+				spdu.seq_num = sequence_number;
+				strcpy(spdu.peerName, username);
+
 				strcpy(spdu.peerName, username);
 				printf("File (to download) name: \n");
 				scanf(" %s", &spdu.contentName);
+
+				name = strlen(spdu.peerName);
+				file_name = strlen(spdu.contentName);
+				spdu.payload = file_name + name;
+				sequence_number = sequence_number + spdu.payload;
+
 				write(sd, &spdu, sizeof(spdu));
 				printf("PDU Sent...\n");
 				
@@ -259,16 +310,35 @@ int main(int argc, char **argv)
 				break;
 			case 'O':
 				opdu.type = 'O';
+
+				opdu1.type = 'O';
+				strcpy(opdu1.http_req, "LIST");
+				opdu1.source_port = 33000;
+				opdu1.dest_port = 33000;
+				opdu1.seq_num = sequence_number;
+				strcpy(opdu1.peerName, username);
+				strcmp(opdu1.contentName, "LIST");
+
+				name = strlen(opdu1.peerName);
+				opdu1.payload = name;
+				sequence_number = sequence_number + tpdu.payload;
+				
 				printf("Requesting list of online content...\n");
-				write(sd, &opdu, sizeof(opdu));
-				read(sd, &bp, sizeof(bp));
-				if(bp.type == 'E'){
-					printf("%s Empty\n", bp.data);
-					break;
-				}
-				if(bp.type == 'O'){
-					printf("%s\n", bp.data);
-					break;
+				write(sd, &opdu1, sizeof(opdu1));
+				while ((i = read(sd, &bp, sizeof(bp))) > 0){
+					if(bp.type == 'N'){
+							printf("|        HTTP/1.1 404 Bad Request      |\r\n");
+							printf("| %-10i       |        %10i |\n", opdu1.source_port, opdu1.dest_port);
+   							printf("| %-10c       |        %10i |\n",bp.type, bp.ack_num);
+						break;
+					}else if(bp.type == 'A'){
+							printf("|           HTTP/1.1 200 OK            |\r\n");
+							printf("| %-10i       |        %10i |\n", opdu1.source_port, opdu1.dest_port);
+   							printf("| %-10c       |        %10i |\n",bp.type, bp.ack_num);	
+							printf("List of files\n%s\n", bp.data);				
+							//strcpy(registered, opdu1.contentName);
+						break;
+					}
 				}
 				break;
 			case 'Q':

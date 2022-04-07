@@ -23,6 +23,11 @@ PDU : Protocol Data Unit
  
 struct PDUFiles { // Struct to store File Data
 	char type;
+	char http_req[10];
+	int source_port;
+	int dest_port;
+	int seq_num;
+	int payload;
 	char peerName[10];
 	char fileName[10];
 	struct sockaddr_in data;
@@ -30,6 +35,7 @@ struct PDUFiles { // Struct to store File Data
 
 struct PDUStatus { // Struct for status messages
 	char type;
+	int ack_num;
 	char data[100];
 } error, ack;
  
@@ -39,8 +45,15 @@ int counter = 0;
 int addToList(struct PDUFiles pdu){
 	/* Adds Files to the File List as they are registered by a peer.
 	Takes a File Data Unit as input, Returns 0 for success and -1 on failure */
-	printf("PDU to add:\nType: %c\nPeer Name: %s\nFile Name: %s\n", pdu.type, pdu.peerName, pdu.fileName);
-	printf("Port: %u\n", pdu.data.sin_port);
+
+	printf("| %-10s   / HTTP/1.1   %10s |\r\n", pdu.http_req, pdu.fileName);
+	printf("| %-10i       |        %10i |\n", pdu.source_port, pdu.dest_port);
+    printf("| %-10i       |        %10i |\n", pdu.seq_num, pdu.payload);
+
+
+	ack.ack_num = pdu.seq_num + pdu.payload;
+	error.ack_num = ack.ack_num;
+
 	for(int i = 0; i <= counter; i++){
 		if(strcmp(fileList[i].peerName, pdu.peerName) == 0 && strcmp(fileList[i].fileName, pdu.fileName) == 0){
 			printf("Error: Names are the same\n");
@@ -56,6 +69,16 @@ int removeFromList(struct PDUFiles pdu){
 	/*Removes Files from the File List as they are unregistered by the peers
 	Takes a File Data Unit as input, returns 0 for success and -1 for failure*/
 	for(int i = 0; i < counter; i++){
+
+
+	printf("| %-10s   / HTTP/1.1   %10s |\r\n", pdu.http_req, pdu.fileName);
+	printf("| %-10i       |        %10i |\n", pdu.source_port, pdu.dest_port);
+    printf("| %-10i       |        %10i |\n", pdu.seq_num, pdu.payload);
+
+	ack.ack_num = pdu.seq_num + pdu.payload;
+	error.ack_num = ack.ack_num;
+
+
 		if(strcmp(fileList[i].peerName, pdu.peerName) == 0 && strcmp(fileList[i].fileName, pdu.fileName) == 0){
 			printf("PDU to remove: \nPeer Name: %s\nFile Name: %s\n", fileList[i].peerName, fileList[i].fileName);
 			for(i; i <= counter; i++){
@@ -140,17 +163,16 @@ main(int argc, char *argv[])
     /* Bind the socket */
         if (bind(servSock, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0)
 		fprintf(stderr, "can't bind to %d port\n",port);
-		printf("Bound to port %d\n", port);
         listen(servSock, 5);	
 		addrLen = sizeof(fromAddr);
 
 	
-	error.type = 'E';
+	//error.type = 'E';
 	ack.type = 'A';
 	
 	// ERROR Message
 	char errmsg[100] = "Error!";
-	error.type = 'E';
+	error.type = 'N';
 	strcpy(error.data, errmsg);
 	
 	while (1) {
@@ -159,15 +181,16 @@ main(int argc, char *argv[])
 		
 		// Receive pdu
 		printf("Waiting for PDU...\n");
+		
 		if (recvfrom(servSock, &buf, sizeof(buf), 0, (struct sockaddr *)&fromAddr, &addrLen) < 0){
 			fprintf(stderr, "recvfrom error\n");
 			exit(1);
 		}
+
 		
 		switch(buf.type){
 		case 'R':
 			// Register Files to the File List
-			printf("Got type R\n");
 			if(addToList(buf) < 0){
 				fprintf(stderr, "Error: Name already exists\n");
 				sendto(servSock, &error, sizeof(error), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr));
@@ -188,9 +211,22 @@ main(int argc, char *argv[])
 			printf("Sending File's address...\n");
 			sendto(servSock, &spdu, sizeof(spdu), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr));
 			break;
+		case 'L':
+			printf("Got type L\n");
+			spdu.type = 'L';
+			if(searchList(&buf) < 0){
+				fprintf(stderr, "Error: File name not found\n");
+				sendto(servSock, &error, sizeof(error), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr));
+				break;
+			}
+			// buf found in List
+			spdu = buf;
+			printf("Sending File'servSock address...\n");
+			sendto(servSock, &spdu, sizeof(spdu), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr));
+			break;
 		case 'T':
 			// Deregistering Files from File List
-			printf("Got type T\n");
+			
 			if(removeFromList(buf) < 0){
 				fprintf(stderr, "Error: Name does not exist\n");
 				sendto(servSock, &error, sizeof(error), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr));
@@ -200,18 +236,24 @@ main(int argc, char *argv[])
 			break;
 		case 'O':
 			// Listing all files available online
-			printf("Got type O\n");
+			printf("| %-10s   / HTTP/1.1   %10s |\r\n", "GET", "LIST");
+			printf("| %-10i       |        %10i |\n", buf.source_port, buf.dest_port);
+			printf("| %-10i       |        %10i |\n", buf.seq_num, buf.payload);
+
+			opdu.ack_num = buf.seq_num + buf.payload;
+			error.ack_num = ack.ack_num;
+			
 			if(counter == 0){
 				printf("List is empty\n");
 				sendto(servSock, &error, sizeof(error), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr));
 				break;
 			}
-			opdu.type = 'O';
+			opdu.type = 'A';
 			char list[100];
 			list[0] = '\0';
 			List(&list);
 			strcpy(opdu.data, list);
-			printf("%s\n", opdu.data);
+
 			if(sendto(servSock, &opdu, sizeof(opdu), 0, (struct sockaddr *)&fromAddr, sizeof(fromAddr)) < 0){
 				printf("O: send to error\n");
 				exit(1);
