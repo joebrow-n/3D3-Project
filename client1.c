@@ -273,7 +273,7 @@ int main(int argc, char **argv)
 					sd_tcp3 = socket(AF_INET, SOCK_STREAM, 0);
 					if (sd_tcp3 < 0)
 						fprintf(stderr, "Can't create TCP socket \n");
-					newAddress(&rpdu2, sd_tcp3, PEER_PORT, "10.35.70.32"); 
+					newAddress(&rpdu2, sd_tcp3, PEER_PORT, "10.35.70.11"); 
 					printf("Port: %d\n", rpdu2.data.sin_port);
 					rpdu2.type = 'R';
 					strcpy(rpdu2.peerName, username);
