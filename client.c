@@ -43,7 +43,7 @@ void receiveFile(int sd, char* content);
 int main(int argc, char **argv)
 {
 	int n, i, alen, ret_sel, sd_tcp, sd_tcp3;
-	int sd, port = 33001, file;
+	int sd, port = 33000, file;
 	struct	hostent	*phe; // Store information about given host
 	struct	sockaddr_in sin, server, reg_addr, client;
 	char *host = "localhost", *pos, username[10], sbuf[BUFLEN];
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 			case 'R':
 				rpdu.type = 'R';
 				strcpy(rpdu.http_req, "POST");
-				rpdu.source_port = port;
+				rpdu.source_port = rpdu.data.sin_port;
 				rpdu.dest_port = SERVER_TCP_PORT;
 				rpdu.seq_num = sequence_number;
 				strcpy(rpdu.peerName, username);
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 			case 'T':
 				tpdu.type = 'T';
 				strcpy(tpdu.http_req, "DELETE");
-				tpdu.source_port = port;
+				tpdu.source_port = tpdu.data.sin_port;
 				tpdu.dest_port = SERVER_TCP_PORT;
 				tpdu.seq_num = sequence_number;
 				strcpy(tpdu.peerName, username);
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
 				spdu.type = 'S';
 
 				strcpy(spdu.http_req, "GET");
-				spdu.source_port = port;
+				spdu.source_port = spdu.data.sin_port;
 				spdu.dest_port = SERVER_TCP_PORT;
 				spdu.seq_num = sequence_number;
 				strcpy(spdu.peerName, username);
@@ -313,7 +313,7 @@ int main(int argc, char **argv)
 
 				opdu1.type = 'O';
 				strcpy(opdu1.http_req, "LIST");
-				opdu1.source_port = port;
+				opdu1.source_port = opdu1.data.sin_port;
 				opdu1.dest_port = SERVER_TCP_PORT;
 				opdu1.seq_num = sequence_number;
 				strcpy(opdu1.peerName, username);
