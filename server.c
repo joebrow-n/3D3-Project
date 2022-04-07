@@ -133,7 +133,7 @@ main(int argc, char *argv[])
 	int	addrLen;			/* from-address length		*/
 	struct sockaddr_in servAddr; /* an Internet endpoint address         */
     int servSock, type;        /* socket descriptor and socket type    */
-	int port=3000;
+	int port=33000;
 	int i, file;
 	struct stat size;
 	
